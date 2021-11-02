@@ -2,8 +2,8 @@ __pycache__
 data
 output
 FSRCNN/logs
-FSRCNN/training
-FSRCNN/weights
+FSRCNN/checkpoints
 tfrecords
 weights
+
 

@@ -15,8 +15,10 @@ Pipeline
 
 '''
 
+
+
 batch_size = 16
-data_dir = 'data/DIV2K/DIV2K_train_HR/'
+data_dir = 'data/DIV2K/DIV2K_valid_HR/'
 tfrecords_dir = "tfrecords/"
 files = os.listdir(data_dir)
 CHN = 1 # num channels
@@ -79,14 +81,14 @@ def inverse_process_to_y(arr):
     denormalize_y(arr)
     pass
 
-record_prefix = "div2k_train"
+record_prefix = "div2k_valid"
 lr_list, hr_list = [], []
 os.makedirs(tfrecords_dir, exist_ok=True)
 
 # create writers to save tfrecords 
-n_tfrecords = 32
+N_TFRECORDS = 32
 writers = []
-for i in range(n_tfrecords):
+for i in range(N_TFRECORDS):
     w = tf.io.TFRecordWriter( f"{tfrecords_dir}{record_prefix}{i}.tfrecords" )
     writers.append(w)
 
@@ -102,10 +104,10 @@ for f in files:
         # dhr = tf.cast(dhr, dtype="uint8")
         # Image.fromarray(dhr.numpy()[...,0]).show()
         sample_count += 1 
-        i = sample_count % n_tfrecords
+        i = sample_count % N_TFRECORDS
         writers[i].write(serialized_example)  
         sample_count +=1
 
-for i in range(n_tfrecords):
+for i in range(N_TFRECORDS):
     writers[i].close() 
     

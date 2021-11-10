@@ -72,9 +72,8 @@ class FSRCNN(keras.Model):
         return x
         
     
-
-# if __name__ == "main":
-#     model = FSRCNN()
-#     model.build((100, None, None, 1))
-#     model.summary()
+if __name__ == "__main__":
+    model = FSRCNN()
+    model.build((100, None, None, 1))
+    model.summary()
 

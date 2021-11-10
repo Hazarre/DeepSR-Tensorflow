@@ -46,11 +46,10 @@ def preprocess(example):
     return lr, hr
 
 
-
 # config and parameters 
 IS_FSRCNN_S = False    # is FSRCNN_S or FSRCNN
-RESUME = True   # Train from scratch or use previously traind weights 
-start_epoch = 37
+RESUME = True  # Train from scratch or use previously traind weights 
+start_epoch = 36
 
 n_tfrecords = 32
 batch_size = 16
@@ -65,7 +64,7 @@ valid_dataset = tf.data.TFRecordDataset(valid_dir).map(preprocess).batch(batch_s
 # prep the model 
 model = FSRCNN(d=32, s=5, m=1, r=4) if IS_FSRCNN_S else FSRCNN()
 loss_fn = tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+optimizer = tf.keras.optimizers.Adam(learning_rate=1e-5)
 model.compile(optimizer, loss=loss_fn)
 
 name_model = "FSRCNN_S" if IS_FSRCNN_S else "FSRCNN"
@@ -75,11 +74,12 @@ checkpoint_path  = f"checkpoints/"+ name_model+"{epoch:03d}.ckpt"
 
 if RESUME: 
     # load pre-trained model 
-    # print(checkpoint_path.format(epoch=start_epoch-1))
-    # checkpoint_dir = os.path.dirname(checkpoint_path.format(epoch=start_epoch-1))
-    # latest = tf.train.latest_checkpoint(checkpoint_dir)
-    # print(latest)
-    model.load_weights("./checkpoints/FSRCNN017.ckpt")
+    print(checkpoint_path.format(epoch=start_epoch-1))
+    checkpoint_dir = os.path.dirname(checkpoint_path.format(epoch=start_epoch-1))
+    latest = tf.train.latest_checkpoint(checkpoint_dir)
+    print(latest)
+    model.load_weights("checkpoints/FSRCNN036.ckpt")
+    print("model loaded")
 
 # Training
 callbacks = [
@@ -90,6 +90,7 @@ callbacks = [
     tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                         verbose = 1,
                                         monitor="loss",
+                                        save_weights_only=True,
                                         save_freq="epoch"),
 
     tf.keras.callbacks.TensorBoard(log_dir=log_dir, update_freq="epoch")

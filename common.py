@@ -75,3 +75,7 @@ def evaluate(model, dataset):
         psnr_value = psnr(hr, sr)[0]
         psnr_values.append(psnr_value)
     return tf.reduce_mean(psnr_values)
+
+
+def pixel_shuffle(scale):
+    return lambda x: tf.nn.depth_to_space(x, scale)

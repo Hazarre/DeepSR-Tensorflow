@@ -1,8 +1,11 @@
 name: deepsr
+channels: 
+  - conda-forge
 dependencies:
-- pip
-- Pillow
-- scikit-image
-- pip:
-  - tensorflow
-  - notebook
+  - pip
+  - Pillow
+  - scikit-image
+  - opencv
+  - pip:
+    - tensorflow
+    - notebook

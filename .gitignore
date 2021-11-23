@@ -2,10 +2,11 @@ __pycache__
 data
 output
 FSRCNN/logs
+ASRCNN/logs
 FSRCNN/checkpoints
+ASRCNN/checkpoints
 tfrecords
 weights
 
-
-
 condaenv.ugkv290f.requirements.txt
+tfrecords_x4

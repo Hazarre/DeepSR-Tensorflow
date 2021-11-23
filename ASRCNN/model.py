@@ -9,24 +9,25 @@ This one has 12637 -- good enough.
 Counting in PReLU, this model had 17.1k params.
 
 From the paper: 
- FSRCNN:     (d=56, s=12, m=4, r=4)
- FSRCNN-s :  (d=32, s=5, m=1, r=4)
+ ASRCNN:     (d=56, s=12, m=4, r=4)
+ ASRCNN-s :  (d=32, s=5, m=1, r=4)
 '''
 
-class FSRCNN(keras.Model):
+class ASRCNN(keras.Model):
     '''
     d: the LR feature dimension
     s: the number of shrinking filters s, and  m
     m: the mapping depth
     r: upscale_factor HR/LR
     '''
-    def __init__(self, d=56, s=12, m=4, r=2):
+
+    def __init__(self, d=56, s=12, m=4, r=4):
         
         def conv_w_init(shape, dtype=None):
             std = tf.math.sqrt( 2 / (shape[-1] * shape[-2] * shape[-3]))
             return tf.random.normal(shape, mean=0.0, stddev=std)
 
-        super(FSRCNN, self).__init__()
+        super(ASRCNN, self).__init__()
         self.feature_extraction = keras.Sequential([ 
             
             Conv2D(d, (5, 5), (1, 1), "same", 
@@ -57,22 +58,29 @@ class FSRCNN(keras.Model):
             PReLU(shared_axes=[1,2])
         ], name="expanding")
 
-        self.deconv = keras.Sequential([   
-            Conv2DTranspose(1, (9, 9), 
-                     (r, r), padding ="same", output_padding=(r - 1, r -1), kernel_initializer = keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None))
+        self.deconv1 =  keras.Sequential([
+                    Conv2DTranspose(1, (2, 2), 
+                     (2, 2), kernel_initializer = keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None))
         ])
+
+        self.deconv2 =  keras.Sequential([
+                    Conv2DTranspose(1, (2, 2), 
+                     (2, 2), kernel_initializer = keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None))
+        ])
+    
     
     def call(self, inputs):
         x = self.feature_extraction(inputs)
         x = self.shrink(x)
         x = self.map(x)
         x = self.expand(x)
-        x = self.deconv(x)
+        x = self.deconv1(x)
+        x = self.deconv2(x)
         return x
         
     
 if __name__ == "__main__":
-    model = FSRCNN(d=32, s=5, m=1, r=2)
-    model.build((33, 100, 100, 1))
+    model = ASRCNN()
+    model.build((100, None, None, 1))
     model.summary()
 

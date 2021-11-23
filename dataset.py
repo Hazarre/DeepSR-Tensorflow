@@ -12,24 +12,16 @@ Pipeline
     - convert images into fixed size tensors 
     - apply transformations (normalization) to tensors 
     - save tensors as tfrecords 
-
 '''
 
 
-
-batch_size = 16
-data_dir = 'data/DIV2K/DIV2K_valid_HR/'
-tfrecords_dir = "tfrecords/"
-files = os.listdir(data_dir)
-CHN = 1 # num channels
-R = 4   # upscaling facter
 
 def process_to_y(img):
     '''
     Takes a rgb PIL image img. 
 
     Returns a pair of 
-        a list of SIZE/4 x SIZE/4 y channel lr images numpy array 
+        a list of SIZE/R x SIZE/R y channel lr images numpy array 
         a list of   SIZE x SIZE   y channel hr images numpy array
     '''
     lr_list , hr_list = list() , list()
@@ -39,7 +31,7 @@ def process_to_y(img):
             hr_rgb = img.crop( (i*SIZE, j*SIZE, (i+1)*SIZE, (j+1)*SIZE) )
             hr_y   = rgb2ycbcr(hr_rgb)[...,0] 
             hr_y   = Image.fromarray( hr_y )
-            lr_y   = hr_y.resize( (SIZE//4, SIZE//4) , Image.BICUBIC )
+            lr_y   = hr_y.resize( (SIZE//R, SIZE//R) , Image.BICUBIC )
             lr_list.append( np.array(lr_y, dtype="uint8") )
             hr_list.append( np.array(hr_y, dtype="uint8") )
     return (lr_list, hr_list)
@@ -81,7 +73,16 @@ def inverse_process_to_y(arr):
     denormalize_y(arr)
     pass
 
-record_prefix = "div2k_valid"
+
+dataset_type = "valid"
+batch_size = 16
+data_dir = 'data/DIV2K/DIV2K_' + dataset_type + '_HR/'
+tfrecords_dir = "tfrecords/"
+files = os.listdir(data_dir)
+CHN = 1 # num channels
+R = 2   # upscaling facter
+
+record_prefix = "div2k_" + dataset_type
 lr_list, hr_list = [], []
 os.makedirs(tfrecords_dir, exist_ok=True)
 
@@ -100,14 +101,13 @@ for f in files:
     
     for (lr, hr) in zip(lr_list, hr_list):
         serialized_example = serialize(lr, hr)
-        # dlr, dhr = deserialize(serialized_example)
-        # dhr = tf.cast(dhr, dtype="uint8")
-        # Image.fromarray(dhr.numpy()[...,0]).show()
+        dlr, dhr = deserialize(serialized_example)
+        dhr = tf.cast(dhr, dtype="uint8")
+        dlr = tf.cast(dlr, dtype="uint8")
         sample_count += 1 
         i = sample_count % N_TFRECORDS
         writers[i].write(serialized_example)  
         sample_count +=1
-
 for i in range(N_TFRECORDS):
     writers[i].close() 
     

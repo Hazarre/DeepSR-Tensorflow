@@ -1,19 +1,5 @@
 ## DeepSR 
-This repository serves as a quickstart to deep super-resolution model implementation and evaluation. The models are implemented in accordance to the actual paper, but the training dataset and methods will deviate from them to streamline the framework. This repository uses widely use numpy and PIL package to create a dataset pipeline from div2k that can be used for different ML frameworks. 
-
-
-## Example Using this repo
-Run the following command to setup an Anaconda environtment: 
-```
-conda env create -f environment.yml
-```
-Download datasets 
-
-Run dataset.py to generate ```.tfrecord``` format datasets. They will be stored inside the ```tfrecords/folder```. 
-
-
-### Testing and Benchmarking
-In each ```{MODEL_NAME}/```, implement ```inference.py``` to be called for standard testing in ```test.py``` and benchmarking ```benchmark.py```. The interface should take two arguments,  the low resolution images
+This repository serves as a quickstart to deep super-resolution model implementation and evaluation. The models are implemented in accordance to the actual paper, but the training dataset and methods will deviate from them to streamline the framework. This repository uses popular numpy and PIL package to create a dataset pipeline from div2k that can be used for tensorflow. 
 
 ### Standards
 Dataset: 
@@ -25,16 +11,22 @@ Evaluation metrics are performed on unit8 PIL images y-channel using the followi
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from skimage.color import rgb2ycbcr, ycbcr2rgb
 ```
+Current models are implemented for mainly x4 and some x2 upscaling factors. 
 
-### Dateset 
-Stored under the ```data/``` folder. 
-Run ```dataset.py```
+## Example Using this repo
+### Environment Setup
+Clone the repo and run the following command to setup an Anaconda environtment: 
+```
+conda env create -f environment.yml
+```
+
+### Dataset 
+Download the datasets and store them under the ```data/``` folder. 
+Run ```dataset.py``` to generate ```.tfrecord``` format datasets. They will be stored inside ```tfrecords/```. (Rename the folder for different upscaling factors to keep tfrecords for different datasets.)
 
 
-### Training 
-
-### Inference / Transfer Learning
-
+### Model & Training 
+In each ```{MODEL_NAME}/```, implement ```model.py```. Train the model and save the weights to ```weights```. This will allow model to be later loaded in benchmark.py. 
 
 
 
@@ -44,7 +36,8 @@ Directory Structure:
 ```{MODEL_NAME}/``` contains each implemented model and their training.
 ```dataset.py``` is the pipeline for generating images.
 ```common.py``` contains global methods, parameters and constants. 
-```benchmark.py``` 
+```benchmark.py``` provides methods for obtaining SR metrics (PSNR and SSIM) and generating SR images side by side. 
+
 Optional: 
 ```tfrecords``` will contains ```.tfrecords``` for faster data reading in tensorflow 
 ```output``` is the directory for inferenced image outcomes from various models for comparison
@@ -62,9 +55,8 @@ From paper (Accelerating the Super-Resolution Convolutional Neural Network)[http
 
 
 
-
 ### Reference: 
-[1] srgan: https://github.com/krasserm/super-resolution
+[1] srgan: https://github.com/krasserm/super-resolution 
 [2] esrgan: https://hub.tensorflow.google.cn/captain-pool/esrgan-tf2/1
 [3] keras: https://keras.io/examples/vision/super_resolution_sub_pixel
 [4] FSRCNN: http://mmlab.ie.cuhk.edu.hk/projects/FSRCNN.html

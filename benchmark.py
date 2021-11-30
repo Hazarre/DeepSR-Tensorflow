@@ -16,11 +16,11 @@ import cv2
 # Local import 
 from common import resolve_single
 from srgan import generator
-from mcdn import mcdn
 from FSRCNN.model import FSRCNN
 from ASRCNN.model import ASRCNN
+from MCDN.model import MCDN
 
-R = 4
+R = 2
 SIZE = 100
 
 def concat_imgs_h(imgs):
@@ -118,9 +118,10 @@ def esrgan_upscaler():
     )
     return upscaler
  
-def mcdn_upscaler(): 
+def mcdn_upscaler(r=R): 
     def upscale(lr):
-        mcdn.load_weights("weights/mcdn/model6_valpsnr") 
+        mcdn = MCDN(if_train=False, scale=r, name="MCDN_X%d" % r)
+        mcdn.load_weights("weights/mcdn_x%d.h5" % r, by_name=True) 
         # normalized yuv
         yuv = (rgb2ycbcr(lr) - 16 )/ 219
         yuv = tf.cast(tf.expand_dims(yuv, axis=0), tf.float32)
@@ -310,6 +311,7 @@ def restore_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             hr = Image.fromarray(frame)
             lr = hr.resize((hr.size[0]//R, hr.size[1]//R), Image.BICUBIC)
+            lr.show()
             sr = upscaler(lr)
             sr = cv2.cvtColor(np.array(sr), cv2.COLOR_RGB2BGR)
             output_writer.write(sr)
@@ -334,9 +336,10 @@ def restore_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
 #     result = eval_dataset("data/" + dataset_name, us) 
 #     print(result)
 
-upscalers={ "bilinear": bilinear_upscaler(), 
-            "bicubic": bicubic_upscaler(), 
-            "fsrcnn": fsrcnn_upscaler() } 
+upscalers={ "mcdn": mcdn_upscaler()}
+            # "bilinear": bilinear_upscaler(), 
+            # "bicubic": bicubic_upscaler(), 
+            # "fsrcnn": fsrcnn_upscaler() } 
 
 # videos = os.listdir("data/videos")
 
@@ -349,18 +352,19 @@ upscalers={ "bilinear": bilinear_upscaler(),
 
 
 for model_name in upscalers.keys():
-    for i in [1,2,3,4]:
+    for i in [1,2,3,4,5]:
         upscaler = upscalers[model_name]
+        vid_in_path  = "/home/henrychang/Desktop/vid%d_cropped_1_2th.mp4" % i
+
+        # vid_out_path = "/home/henrychang/Desktop/Enhanced/vid%d_"  % i + model_name + ".mp4"
+        # enhance_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*60*10)
+
+        # vid_out_path = "/home/henrychang/Desktop/Restoredx2/vid%d_"  % i + model_name + ".mp4"
+        # restore_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*60*10)
 
         vid_in_path  = "/home/henrychang/Desktop/vid%d_cropped_1_4th.mp4" % i
-        # vid_out_path = "/home/henrychang/Desktop/Enhanced/vid%d_"  % i + model_name + ".mp4"
-        # enhance_video(vid_in_path, vid_out_path, upscaler, r=4, max_frame = 30*60*10)
-
-        # vid_out_path = "/home/henrychang/Desktop/Restored/vid%d_"  % i + model_name + ".mp4"
-        # restore_video(vid_in_path, vid_out_path, upscaler, r=4, max_frame = 30*60*10)
-
         vid_out_path = "/home/henrychang/Desktop/Upscaledx2/vid%d_"  % i + model_name + ".mp4"
-        upscale_video(vid_in_path, vid_out_path, upscaler, r=4, max_frame = 30*60*10)
+        upscale_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*60*10)
 
 
 

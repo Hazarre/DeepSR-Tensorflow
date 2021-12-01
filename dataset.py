@@ -14,8 +14,6 @@ Pipeline
     - save tensors as tfrecords 
 '''
 
-
-
 def process_to_y(img):
     '''
     Takes a rgb PIL image img. 
@@ -72,7 +70,6 @@ def inverse_process_to_y(arr):
     '''
     denormalize_y(arr)
     pass
-
 
 dataset_type = "valid"
 batch_size = 16

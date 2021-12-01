@@ -14,8 +14,7 @@ from PIL import Image
 import cv2
 
 # Local import 
-from common import resolve_single
-from srgan import generator
+from SRGAN.model import generator
 from FSRCNN.model import FSRCNN
 from ASRCNN.model import ASRCNN
 from MCDN.model import MCDN
@@ -101,11 +100,19 @@ def eval_image(img_dir, upscalers, output_dir):
     print("Image saved at: " + output_dir)
 
 def srgan_upscaler(): 
+    def resolve_single(model, lr):
+        return resolve(model, tf.expand_dims(lr, axis=0))[0]
+
+    def resolve(model, lr_batch):
+        lr_batch = tf.cast(lr_batch, tf.float32)
+        sr_batch = model(lr_batch)
+        sr_batch = tf.clip_by_value(sr_batch, 0, 255)
+        sr_batch = tf.round(sr_batch)
+        sr_batch = tf.cast(sr_batch, tf.uint8)
+        return sr_batch
     # load srgan generator 
-    weights_dir = 'weights/srgan'
-    weights_file = lambda filename: os.path.join(weights_dir, filename)
     gan_generator = generator()
-    gan_generator.load_weights(weights_file('gan_generator.h5'))
+    gan_generator.load_weights('weights/srgan_generator.h5')
     upscaler = lambda lr: Image.fromarray(  resolve_single(gan_generator, np.array(lr)).numpy())
     return upscaler
 
@@ -198,7 +205,7 @@ def asrcnn_upscaler():
         rgb_sr = Image.fromarray(rgb_sr)
         return rgb_sr
     return lambda lr: upscale(lr)
-        
+
 def upscale_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
     '''
     Upscales Image by r times. 
@@ -243,6 +250,8 @@ def upscale_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
 
 def enhance_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
     '''
+    Upscales then bicubic downscale vidoes (frame by frame) to its original size. 
+
     Args:
 
     r: ratio to upsacle  
@@ -284,14 +293,15 @@ def enhance_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
 
 def restore_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
     '''
+    Bicubic downscales then upscales vidoes (frame by frame) to its original size. 
+    
     Args:
-
-    r: ratio to upsacle  
-    vid_in_path:
-    vid_out_path: 
-    upscaler: 
-    max_frame: 
-    r: 
+        r: ratio to upsacle  
+        vid_in_path:
+        vid_out_path: 
+        upscaler: 
+        max_frame: 
+        r: 
     '''
     cap = cv2.VideoCapture(vid_in_path)
     frame_width = int(cap.get(3))
@@ -336,20 +346,12 @@ def restore_video(vid_in_path, vid_out_path, upscaler, r=R, max_frame = 30*15):
 #     result = eval_dataset("data/" + dataset_name, us) 
 #     print(result)
 
+
+
 upscalers={ "mcdn": mcdn_upscaler()}
-            # "bilinear": bilinear_upscaler(), 
-            # "bicubic": bicubic_upscaler(), 
-            # "fsrcnn": fsrcnn_upscaler() } 
-
-# videos = os.listdir("data/videos")
-
-# for model_name in upscalers.keys():
-#     for vid_name in videos: 
-#         print(model_name, vid_name)
-#         vid_in_path  = 'data/videos/' + vid_name
-#         upscaler = upscalers[model_name]
-#         vid_out_path = 'data/videos/output/upscaled_' + model_name + "_" + vid_name
-
+            "bilinear": bilinear_upscaler(), 
+            "bicubic": bicubic_upscaler(), 
+            "fsrcnn": fsrcnn_upscaler() } 
 
 for model_name in upscalers.keys():
     for i in [1,2,3,4,5]:
